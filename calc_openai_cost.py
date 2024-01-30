@@ -110,21 +110,25 @@ if __name__ == '__main__':
     parser.add_argument('--input', '-i', 
         help='File path to the exported activity log from OpenAI Playground (https://platform.openai.com/usage). ' \
              'Example: `activity-2024-01-01-2024-02-01.json`')
+    parser.add_argument('--all', '-a', action='store_true', help='Print API cost per model')
     args = parser.parse_args()
 
     with open(args.input) as f:
         data = json.load(f)
-    
+
     result = calculate_total_cost_per_user(data['data'], model_map_cost_per_1k)
-    
+
     all_cost = 0
     for user in result:
-        all_cost += result[user]['total']
+        total = result[user].pop('total')
+        all_cost += total
+        
         print('=================================')
-        print(f'* {user}')
-        for model in result[user]:
-            print(f"  - {model}: ${round(result[user][model], 2)}")
-        print('=================================')
-        print('')
+        print(f'* {user}: ${total}')
+        if args.all:
+            for model in result[user]:
+                print(f"  - {model}: ${round(result[user][model], 2)}")
+            print('=================================')
+            print('')
 
     print(f'- Team Total Cost: ${all_cost}')
